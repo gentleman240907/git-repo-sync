@@ -1,0 +1,19 @@
+{
+  "name": "git-repo-sync",
+  "version": "1.0.0",
+  "description": "2 つの GitHub リポジトリを同期（基準ブランチまたは指定ブランチ）",
+  "type": "module",
+  "bin": {
+    "git-repo-sync": "./src/index.js"
+  },
+  "scripts": {
+    "sync": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
