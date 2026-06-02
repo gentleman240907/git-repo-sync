@@ -1,6 +1,7 @@
 /**
  * 各 source/target にローカル clone 絶対パス（path）必須。
  * .repos 自動 clone は使用しません。
+ * baseBranch 省略時は --source-branch / --target-branch を指定。
  */
 
 /** @type {Record<string, import('./src/lib/profile-types.js').SyncProfile>} */

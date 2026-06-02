@@ -85,32 +85,39 @@ export async function syncBase(config) {
 /**
  * FR-02: 指定ブランチ同期（source → target）
  * @param {Awaited<ReturnType<import('./config.js').loadConfig>>} config
- * @param {string} branch
+ * @param {string} sourceBranch - source 側のブランチ名
+ * @param {string} targetBranch - target 側のブランチ名
  */
-export async function syncBranch(config, branch) {
+export async function syncBranch(config, sourceBranch, targetBranch) {
   const { source, target } = config;
-  const isSourceBase = branch === source.baseBranch;
-  const isTargetBase = branch === target.baseBranch;
+  const isSourceBase = sourceBranch === source.baseBranch;
+  const isTargetBase = targetBranch === target.baseBranch;
 
   if (isSourceBase && isTargetBase) {
     logInfo(
-      `指定ブランチ "${branch}" は両側の基準ブランチと同一です。基準ブランチ同期を実行します。`,
+      `指定ブランチが両側の基準ブランチと同一です（source: ${sourceBranch}, target: ${targetBranch}）。基準ブランチ同期を実行します。`,
     );
     return syncBase(config);
   }
 
   await prepareRepos(config);
 
-  for (const side of [source, target]) {
-    const exists = await branchExists(side.path, branch);
-    if (!exists) {
-      throw Object.assign(
-        new Error(
-          `ブランチ "${branch}" は ${side.id} に存在しません（${config.profileId}）`,
-        ),
-        { code: 'GIT' },
-      );
-    }
+  if (!(await branchExists(source.path, sourceBranch))) {
+    throw Object.assign(
+      new Error(
+        `ブランチ "${sourceBranch}" は source に存在しません（${config.profileId}）`,
+      ),
+      { code: 'GIT' },
+    );
+  }
+
+  if (!(await branchExists(target.path, targetBranch))) {
+    throw Object.assign(
+      new Error(
+        `ブランチ "${targetBranch}" は target に存在しません（${config.profileId}）`,
+      ),
+      { code: 'GIT' },
+    );
   }
 
   logStep(source.id, source.baseBranch, 'チェックアウトして pull（事前確認）');
@@ -132,21 +139,25 @@ export async function syncBranch(config, branch) {
 
   logInfo('基準ブランチの内容が一致しました。指定ブランチ同期を続行します。');
 
-  logStep(source.id, branch, 'チェックアウト、pull、マージ');
-  await checkoutPullMerge(source.path, branch);
+  logStep(source.id, sourceBranch, 'チェックアウト、pull、マージ');
+  await checkoutPullMerge(source.path, sourceBranch);
 
-  logStep(target.id, branch, 'チェックアウト、pull、マージ');
-  await checkoutPullMerge(target.path, branch);
+  logStep(target.id, targetBranch, 'チェックアウト、pull、マージ');
+  await checkoutPullMerge(target.path, targetBranch);
 
-  logStep(target.id, branch, '基準ブランチをフィーチャーブランチにマージ');
-  await checkoutBasePullThenMergeFeature(target.path, target.baseBranch, branch);
+  logStep(target.id, targetBranch, '基準ブランチをフィーチャーブランチにマージ');
+  await checkoutBasePullThenMergeFeature(
+    target.path,
+    target.baseBranch,
+    targetBranch,
+  );
 
-  logStep(source.id, branch, 'コピー元のチェックアウト');
-  await checkoutPull(source.path, branch);
+  logStep(source.id, sourceBranch, 'コピー元のチェックアウト');
+  await checkoutPull(source.path, sourceBranch);
 
-  await syncTargetFromSource(config, branch, branch);
+  await syncTargetFromSource(config, sourceBranch, targetBranch);
 
   logInfo(
-    `同期完了 [${config.profileId}]: source → target（指定ブランチ "${branch}"）`,
+    `同期完了 [${config.profileId}]: source（${sourceBranch}）→ target（${targetBranch}）`,
   );
 }

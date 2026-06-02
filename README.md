@@ -32,7 +32,7 @@
 |------|------|
 | `path` | ローカル clone **絶対パス**（必須） |
 | `baseBranch: true` | 基準ブランチ同期 |
-| `baseBranch` 省略 | `--branch` 指定ブランチ同期 |
+| `baseBranch` 省略 | `--source-branch` / `--target-branch` で指定ブランチ同期 |
 
 ## 要件
 
@@ -48,10 +48,13 @@ node src/index.js --list-profiles
 
 node src/index.js --profile dev-to-py-admin-panel
 
-# baseBranch: true プロファイル一括（--profile, --branch と併用不可）
+# baseBranch: true プロファイル一括（--profile, --source-branch / --target-branch と併用不可）
 node src/index.js --all-base-branch
 
-node src/index.js --profile branch-to-s-admin-panel --branch feature/foo
+# source / target でブランチ名が異なる場合も指定可能
+node src/index.js --profile branch-to-s-admin-panel \
+  --source-branch feature/foo \
+  --target-branch feature/foo
 ```
 
 `npm run sync -- --profile ...` も同様（`--` は npm 引数渡し用）。

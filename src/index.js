@@ -21,13 +21,15 @@ const EXIT = {
 function printUsage() {
   console.log(`使い方:
   git-repo-sync --profile <id>
-  git-repo-sync --profile <id> --branch <name>
+  git-repo-sync --profile <id> --source-branch <name> --target-branch <name>
   git-repo-sync --all-base-branch
   git-repo-sync --list-profiles
 
 オプション:
+  --source-branch     source 側の同期対象ブランチ名（指定ブランチプロファイルで必須）
+  --target-branch     target 側の同期対象ブランチ名（指定ブランチプロファイルで必須）
   --all-base-branch   baseBranch: true の全プロファイルで基準ブランチ同期
-                      （--profile および --branch と併用不可）
+                      （--profile および --source-branch / --target-branch と併用不可）
 
 要件:
   gh CLI           ログイン済みアカウント（gh auth login）、同期前にアカウント選択
@@ -62,7 +64,7 @@ async function printProfileList() {
     const type =
       p.syncMode === 'base'
         ? `基準ブランチ (${p.sourceBaseBranch} → ${p.targetBaseBranch})`
-        : '指定ブランチ (--branch 必須)';
+        : '指定ブランチ (--source-branch と --target-branch 必須)';
     console.log(`  ${p.id}${label}`);
     console.log(`    ${p.source} → ${p.target}`);
     console.log(`    source.path: ${p.sourcePath}`);
@@ -108,7 +110,8 @@ async function main() {
   const { values, positionals } = parseArgs({
     options: {
       profile: { type: 'string', short: 'p' },
-      branch: { type: 'string', short: 'b' },
+      'source-branch': { type: 'string' },
+      'target-branch': { type: 'string' },
       'all-base-branch': { type: 'boolean', default: false },
       'list-profiles': { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h', default: false },
@@ -129,7 +132,9 @@ async function main() {
 
   const allBaseBranch = values['all-base-branch'];
   const profileId = values.profile?.trim();
-  const branchArg = values.branch?.trim();
+  const sourceBranchArg = values['source-branch']?.trim();
+  const targetBranchArg = values['target-branch']?.trim();
+  const hasBranchArgs = Boolean(sourceBranchArg || targetBranchArg);
 
   if (allBaseBranch) {
     if (profileId) {
@@ -137,8 +142,10 @@ async function main() {
       err.code = 'CONFIG';
       throw err;
     }
-    if (branchArg) {
-      const err = new Error('--all-base-branch は --branch と併用できません');
+    if (hasBranchArgs) {
+      const err = new Error(
+        '--all-base-branch は --source-branch / --target-branch と併用できません',
+      );
       err.code = 'CONFIG';
       throw err;
     }
@@ -159,9 +166,9 @@ async function main() {
     const config = await loadConfig(profileId);
 
     if (config.syncMode === 'base') {
-      if (branchArg) {
+      if (hasBranchArgs) {
         const err = new Error(
-          `プロファイル "${profileId}" は基準ブランチプロファイル（baseBranch: true）です。--branch は指定しないでください。`,
+          `プロファイル "${profileId}" は基準ブランチプロファイル（baseBranch: true）です。--source-branch / --target-branch は指定しないでください。`,
         );
         err.code = 'CONFIG';
         throw err;
@@ -170,15 +177,15 @@ async function main() {
       return;
     }
 
-    if (!branchArg) {
+    if (!sourceBranchArg || !targetBranchArg) {
       const err = new Error(
-        `プロファイル "${profileId}" にはブランチ名が必要です: --branch <name>`,
+        `プロファイル "${profileId}" には --source-branch <name> と --target-branch <name> の両方が必要です`,
       );
       err.code = 'CONFIG';
       throw err;
     }
 
-    await syncBranch(config, branchArg);
+    await syncBranch(config, sourceBranchArg, targetBranchArg);
   });
 }
 
