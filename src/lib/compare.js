@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { listTrackedFiles } from './git.js';
+import { listWorktreeFiles } from './git.js';
 
 /**
  * @param {string} filePath
@@ -12,13 +12,13 @@ function hashFile(filePath) {
 }
 
 /**
- * 2 つのチェックアウト間で追跡ファイルの内容を比較
+ * 2 つのチェックアウト間で .gitignore および「.」始まりフォルダ配下を除き比較
  * @param {string} sourceDir
  * @param {string} destDir
  */
 export async function compareTrackedTrees(sourceDir, destDir) {
-  const sourceFiles = await listTrackedFiles(sourceDir);
-  const destFiles = await listTrackedFiles(destDir);
+  const sourceFiles = await listWorktreeFiles(sourceDir);
+  const destFiles = await listWorktreeFiles(destDir);
   const allPaths = new Set([...sourceFiles, ...destFiles]);
 
   const diffFiles = [];

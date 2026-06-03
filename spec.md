@@ -1,6 +1,6 @@
 # Git Repository Sync — 機能仕様書
 
-| バージョン | 2.0.0 |
+| バージョン | 2.1.0 |
 
 ## 概要
 
@@ -18,7 +18,11 @@ target: { repo: 'other/name', baseBranch: 'dev', path: '/abs/path' },
 
 ## 範囲
 
-同期は **source ワークツリー基準**で target を合わせる（`.git` 除く）:
+同期・比較は **source ワークツリー基準**で target を合わせる。次を除く:
+
+- `.git`
+- `.gitignore` 対象
+- パス上いずれかのセグメントが `.` で始まるもの（例: `.husky/`, `.github/`）
 
 - source にない → target から削除
 - source のみ → target に追加
@@ -38,11 +42,11 @@ FR-02 では source / target でブランチ名が異なってよい。
 
 ## 認証
 
-同期前にアカウント選択（`gh auth status` は内部参照のみ、画面非表示）。  
 `git pull`/`fetch`: `.env` の `SOURCE_TOKEN` / `TARGET_TOKEN`（リポジトリ側ごと）。
 
 ## 変更履歴
 
+| 2.1.0 | `gh` アカウント選択削除、`.` 始まりフォルダを比較・同期から除外 |
 | 2.0.0 | `--branch` を `--source-branch` / `--target-branch` に分割 |
 | 1.9.0 | `gh` アカウント選択後に同期 |
 | 1.8.0 | `--all-base-branch` |

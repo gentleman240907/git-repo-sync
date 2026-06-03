@@ -7,7 +7,6 @@ import {
   listProfilesForCli,
 } from './lib/config.js';
 import { validateEnvTokens } from './lib/config.js';
-import { resolveGhAuthentication } from './lib/gh-auth.js';
 import { logError, logInfo } from './lib/logger.js';
 import { clearRepoAuth, syncBase, syncBranch } from './lib/sync.js';
 
@@ -30,9 +29,6 @@ function printUsage() {
   --target-branch     target 側の同期対象ブランチ名（指定ブランチプロファイルで必須）
   --all-base-branch   baseBranch: true の全プロファイルで基準ブランチ同期
                       （--profile および --source-branch / --target-branch と併用不可）
-
-要件:
-  gh CLI           ログイン済みアカウント（gh auth login）、同期前にアカウント選択
 
 設定:
   sync.config.js   source/target リポジトリ、baseBranch、path（ローカル clone 絶対パス）
@@ -96,8 +92,7 @@ async function syncAllBaseBranchProfiles() {
 /**
  * @param {() => Promise<void>} run
  */
-async function withGhAuth(run) {
-  await resolveGhAuthentication();
+async function withSyncAuth(run) {
   validateEnvTokens();
   try {
     await run();
@@ -149,7 +144,7 @@ async function main() {
       err.code = 'CONFIG';
       throw err;
     }
-    await withGhAuth(() => syncAllBaseBranchProfiles());
+    await withSyncAuth(() => syncAllBaseBranchProfiles());
     return;
   }
 
@@ -162,7 +157,7 @@ async function main() {
     throw err;
   }
 
-  await withGhAuth(async () => {
+  await withSyncAuth(async () => {
     const config = await loadConfig(profileId);
 
     if (config.syncMode === 'base') {

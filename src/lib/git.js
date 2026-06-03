@@ -112,13 +112,28 @@ export async function checkoutBasePullThenMergeFeature(
 }
 
 /**
+ * パスに「.」で始まるセグメント（.husky 等）を含むか
+ * @param {string} relPath
+ */
+export function isDotPath(relPath) {
+  return relPath.split('/').some((segment) => segment.startsWith('.'));
+}
+
+/**
+ * 追跡済み + 未追跡（.gitignore 対象を除く）の相対パス一覧。
+ * 「.」で始まるフォルダ配下のパスは含めない。
  * @param {string} cwd
  * @returns {Promise<string[]>}
  */
-export async function listTrackedFiles(cwd) {
-  const { stdout } = await git(cwd, ['ls-files']);
+export async function listWorktreeFiles(cwd) {
+  const { stdout } = await git(cwd, [
+    'ls-files',
+    '-z',
+    '-co',
+    '--exclude-standard',
+  ]);
   if (!stdout) return [];
-  return stdout.split('\n').filter(Boolean);
+  return stdout.split('\0').filter((rel) => rel && !isDotPath(rel));
 }
 
 /**

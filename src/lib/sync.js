@@ -54,7 +54,7 @@ async function syncTargetFromSource(config, sourceBranch, targetBranch) {
     targetBranch,
     `source（${sourceBranch}）からワークツリーを同期 — 追加/更新/削除`,
   );
-  const stats = syncWorktreeFromSource(source.path, target.path);
+  const stats = await syncWorktreeFromSource(source.path, target.path);
 
   logInfo(`target 反映: 追加 ${stats.added}、更新 ${stats.updated}、削除 ${stats.deleted}`);
 }

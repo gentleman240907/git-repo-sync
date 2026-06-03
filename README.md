@@ -4,10 +4,9 @@
 
 - リポジトリ・基準ブランチ・パス: **`sync.config.js`**（`source.path`, `target.path` **絶対パス必須**）
 - `.repos` 自動 clone **なし** — 既に clone 済みのディレクトリのみ使用
-- **ワークツリー同期** — source 基準で target に追加・更新・削除
+- **ワークツリー同期** — source 基準で target に追加・更新・削除（`.gitignore` および `.` で始まるフォルダ配下は除外）
 - **基準ブランチプロファイル** — 同期後、最終行に `Sync: {source HEAD 先頭 7 文字}` を出力（コミットなし）
 - **指定ブランチプロファイル** — コミット・該当出力なし
-- **GitHub アカウント** — 同期前にログインアカウント一覧から選択（`gh` CLI）
 - **トークン** — `.env` の `SOURCE_TOKEN` / `TARGET_TOKEN`（source・target それぞれ pull/fetch）
 
 ## `sync.config.js` 例
@@ -36,12 +35,11 @@
 
 ## 要件
 
-- [GitHub CLI](https://cli.github.com/)（`gh`）のインストールと `gh auth login` によるアカウント登録
+- `.env` に `SOURCE_TOKEN` / `TARGET_TOKEN`（各リポジトリへの `git pull`/`fetch` 用 PAT）
 
 ## 使い方
 
-同期コマンド実行時、ログイン済み GitHub アカウント一覧のみ表示し、アカウントを選びます。  
-実際の `git pull`/`fetch` 認証は **`.env` トークン**を使用します（source → `SOURCE_TOKEN`, target → `TARGET_TOKEN`）。
+`git pull`/`fetch` の認証は **`.env` トークン**のみ使用します（source → `SOURCE_TOKEN`, target → `TARGET_TOKEN`）。
 
 ```bash
 node src/index.js --list-profiles
